@@ -1,0 +1,8 @@
+
+{
+	"name": "passcontrol",
+	"version": "0.0.1",
+	"dependencies": {
+		"deep-diff": "0.3.3"
+	}
+}
