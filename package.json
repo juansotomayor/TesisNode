@@ -3,6 +3,9 @@
 	"name": "passcontrol",
 	"version": "0.0.1",
 	"dependencies": {
-		"deep-diff": "0.3.3"
+		"deep-diff": "0.3.3",
+		"serialport": "3.1.2",
+		"rpi-gpio": "0.7.0",
+		"mysql": "2.12.0"
 	}
 }
