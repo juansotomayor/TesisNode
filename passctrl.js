@@ -95,7 +95,7 @@ function AddUser(tipo, codigo, modulo, idUser) {
     });
     connection.connect();
         //var post  = {x: '1', code_y: y, user:'ON'};
-    if(tipo = "rfid"){
+    if(tipo == "rfid"){
         var query = connection.query('SELECT * FROM usuarios_modulos WHERE rfid = "1" AND code_rfid = "'+codigo+'" AND idModulo = "'+modulo+'"', function(err, rows) {
         if (err) {
             console.log(error.message);
