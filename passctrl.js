@@ -39,7 +39,11 @@ serialport.on('data', function(data){
             Access(Data[0], Data[2], Data[3]); //Envia a la función Access() 
         }else if(Data[1] == "ADMIN"){ // el caso que Data[1] = "ADMIN" significa que el admin va a verifiar o agregar usuario RFID 
            Code = Data[2]; //id bio 
-           AddUser("rfid", Code, Data[3], Data[4]); //data3 = modulo  data4= iduser
+           if(Data[2] == "ADD"){
+               CheckRFID(Data[3], Data[4], Data[5]);
+           }else{
+               AddUser("rfid", Code, Data[3], Data[4]); //data3 = modulo  data4= iduser
+           }
            //Data[2] Corresponde al serial unico del usuario para identificarlos
            //Data[3] Corresponde al ID de la etiqueta RFID, en hexadecimal
            //Data[4] Corresponde al numero del módulo de control de acceso en este caso al 1            
@@ -80,8 +84,31 @@ function Open(x, y, z) {
     */
 }
 /********************************************Adicionar_Usuario***********************************************************/
-//function AddUser(x, y, z, w) {
-
+function CheckRFID(codigo, modulo, idUser) {
+    console.log("Chequea tarjeta RFID ");
+    var connection = mysql.createConnection({
+    host : host,
+    user: user,
+    password: password,
+    database : database
+    });
+    connection.connect();
+    var query = connection.query('SELECT * FROM usuarios_modulos WHERE rfid = "1" AND code_rfid = "'+codigo+'" AND idModulo = "'+modulo+'"', function(err, rows) {
+        if (err) {
+            console.log(error.message);
+        } else {
+            if( rows.length != 0){
+                serialport.write("USER_EXISTING-");
+                console.log("usuario RFID existente");
+            }else{
+                serialport.write("RFID_OK*"+codigo+modulo+idUser);
+                console.log("usuario RFID existente");
+            }
+        }
+    });
+    console.log(query.sql); // INSERT INTO posts SET `id` = 1, `title` = 'Hello MySQL'   
+    connection.end();
+}
 function AddUser(tipo, codigo, modulo, idUser) {
     console.log("Agregar usuarios por "+tipo);
     var etiqueta = 0;
@@ -92,63 +119,15 @@ function AddUser(tipo, codigo, modulo, idUser) {
     database : database
     });
     connection.connect();
-        //var post  = {x: '1', code_y: y, user:'ON'};
-    if(tipo == "rfid"){
-        var query = connection.query('SELECT * FROM usuarios_modulos WHERE rfid = "1" AND code_rfid = "'+codigo+'" AND idModulo = "'+modulo+'"', function(err, rows) {
-        if (err) {
-            console.log(error.message);
-        } else {
-            for (var i = 0; i < rows.length; i++) {
-                console.log(rows[i]);
-            };
-            if( rows.length != 0){
-                etiqueta = 1;
-                 serialport.write("USER_EXISTING-");
-                console.log("usuario RFID existente");
-            }
-        }
-        });
+    var query = connection.query('UPDATE usuarios_modulos SET '+tipo+' = "1", code_'+tipo+' = "'+codigo+'" WHERE id_code = '+idUser+' AND idModulo='+modulo+'', function(error, result) {
+    if (error) {
+        console.log(error.message);
+    } else {
+        serialport.write("USER_ADDED-");
+        console.log('Usuario adicionado!!');
     }
-    if(etiqueta == 0){
-        var query = connection.query('UPDATE usuarios_modulos SET '+tipo+' = "1", code_'+tipo+' = "'+codigo+'" WHERE id_code = '+idUser+' AND idModulo='+modulo+'', function(error, result) {
-        if (error) {
-            console.log(error.message);
-        } else {
-            serialport.write("USER_ADDED-");
-            console.log('Usuario adicionado!!');
-        }
-        });
-    }
-    console.log(query.sql); // INSERT INTO posts SET `id` = 1, `title` = 'Hello MySQL'
-    
-    connection.end();
-}
-function user_biometria(modulo){
-    console.log("chequear usuarios biometria");
-    var mysql      = require('mysql');
-    var connection = mysql.createConnection({
-        host : host,
-        user: user,
-        password: password,
-        database : database
     });
-
-    connection.connect();
-    var query = connection.query('SELECT code_biometria FROM usuarios_modulos WHERE idModulo ="'+modulo+'"', function(err, rows) {
-        if (err) {
-            console.log(error.message);
-        } else {
-            console.log("Lista de usuarios de biometria");
-            var bio_detec = "";
-            for (var i = 0; i < rows.length; i++) {
-                if(rows[i].code_biometria){
-                    bio_detec = bio_detec+"*"+rows[i].code_biometria;
-                }
-            }
-            serialport.write("USERSBIO*"+bio_detec+"-");
-            console.log("USERSBIO"+bio_detec+"-");
-        }
-    });
+    console.log(query.sql); // INSERT INTO posts SET `id` = 1, `title` = 'Hello MySQL'   
     connection.end();
 }
 
@@ -299,8 +278,8 @@ function CheckUser(idModulo, idUser){
                         }
                     }
                 }
-                serialport.write("USERSBIO*"+bio_detec+"-");
-                console.log("USERSBIO"+bio_detec+"-");
+                //serialport.write("USERSBIO*"+bio_detec+"-");
+                //console.log("USERSBIO"+bio_detec+"-");
                 if(codigo == 0){
                     id_bio = a; //proximo usuario biometrico disponible
                     break;
