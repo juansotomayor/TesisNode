@@ -101,8 +101,9 @@ function CheckRFID(codigo, modulo, idUser) {
             console.log(error.message);
         } else {
             if( rows.length == 0){
-                serialport.write("*RFID_OK*"+codigo+modulo+idUser);
+                serialport.write("*RFID_OK*"+codigo+"*"+modulo+"*"+idUser+"-");
                 console.log("usuario RFID Valido");
+                //AddUser("rfid", codigo, modulo, idUser)
             }else{
             //var id = rows[0].code_rfid;
             //if(id == codigo){
@@ -183,8 +184,9 @@ function Access(x, y, z){
         if( rows.length == 0){
             console.log("usuario no existe");
             serialport.write("*USER_NONEXIST-");
-            if(x == "biometria"){
-                serialport.write("*FP_DELETE*"+y);
+            if(x == "BIOMETRIA"){
+                console.log("borrar user bio");
+                serialport.write("*FP_DELETE*"+y+"-");
             }
         }else{
             console.log("usuario existente");
