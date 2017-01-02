@@ -6,7 +6,7 @@ var mysql      = require('mysql');
 
 var host  = 'localhost';  //RPI
 var user = 'root';
-var password = 'adminCIAL2016';
+var password = 'nosewn';
 var database = 'passctrl';
 /*
 var host  = '103.224.22.99';  //raidbotics.com
