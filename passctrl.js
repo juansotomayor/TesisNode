@@ -6,7 +6,7 @@ var mysql      = require('mysql');
 
 var host  = 'localhost';  //RPI
 var user = 'root';
-var password = 'nosewn';
+var password = 'adminCIAL2016';
 var database = 'passctrl';
 /*
 var host  = '103.224.22.99';  //raidbotics.com
@@ -126,6 +126,7 @@ function AddUser(tipo, codigo, modulo, idUser) {
     password: password,
     database : database
     });
+    serialport.write("*-");
     connection.connect();
     var query = connection.query('UPDATE usuarios_modulos SET '+tipo+' = "1", code_'+tipo+' = "'+codigo+'" WHERE id_code = '+idUser+' AND idModulo='+modulo+'', function(error, result) {
     if (error) {
