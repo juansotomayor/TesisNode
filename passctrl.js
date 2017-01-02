@@ -16,6 +16,7 @@ var database = 'raidbuue_cControl';
 */
 var Type = '';
 var Code = '';
+var DataArduino = "";
 //gpio.setup(7, gpio.DIR_OUT);
 
 serialport.on('open', function(){
@@ -23,6 +24,19 @@ serialport.on('open', function(){
 });
 /********************************************Lectura_Serial***********************************************************/
 serialport.on('data', function(data){
+    DataArduino = DataArduino + data;
+    var posicion = DataArduino.lastIndexOf('*');
+    if(posicion > 0){
+        Controlador(DataArduino.substring(0, posicion));
+        DataArduino = DataArduino.substring(posicion+1)
+    }
+});
+serialport.on('close', function(){
+    console.log("puerto cerrado... reconectando");
+    serialport = new SerialPort(process.argv[2]);
+});
+
+function Controlador(data){
     var receivedData = data.toString();
     var Data = receivedData.split("-");
     dataSize = Data.length;
@@ -44,9 +58,6 @@ serialport.on('data', function(data){
            }else{
                AddUser("rfid", Code, Data[3], Data[4]); //data3 = modulo  data4= iduser
            }
-           //Data[2] Corresponde al serial unico del usuario para identificarlos
-           //Data[3] Corresponde al ID de la etiqueta RFID, en hexadecimal
-           //Data[4] Corresponde al numero del módulo de control de acceso en este caso al 1            
         }
     }
     else if(Data[0] == "USER"){
@@ -57,25 +68,17 @@ serialport.on('data', function(data){
         CheckAdmin(Data[1], Data[2], Data[3]);
 
     }else if(Data[0] == "CHECK"){
-        serialport.write("CHECK-");
+        serialport.write("*CHECK-");
         console.log("Chequeo comunición con módulo");
-        //user_biometria('1');
-        //EstadoModulo(Data[1], Data[2]);
     }
     else if(Data[0] == "ADDUSER"){
         console.log("ADDUSER");
         CheckUser(Data[1], Data[2]);
-    }
-    
-});
-
-serialport.on('close', function(){
-    console.log("puerto cerrado... reconectando");
-    serialport = new SerialPort(process.argv[2]);
-});
+    }    
+}
 /********************************************Abrir_puerta***********************************************************/
 function Open(x, y, z) {
-    serialport.write("OPEN_DOOR*"+x+"*"+y+"*"+z+"-")
+    serialport.write("*OPEN_DOOR*"+x+"*"+y+"*"+z+"-")
     //rpi
     /*gpio.write(7, true);
     setTimeout(function () {
@@ -85,7 +88,7 @@ function Open(x, y, z) {
 }
 /********************************************Adicionar_Usuario***********************************************************/
 function CheckRFID(codigo, modulo, idUser) {
-    console.log("Chequea tarjeta RFID ");
+    console.log("Chequea tarjeta RFID "+codigo+" modulo: "+modulo+" iduser= "+idUser);
     var connection = mysql.createConnection({
     host : host,
     user: user,
@@ -97,12 +100,16 @@ function CheckRFID(codigo, modulo, idUser) {
         if (err) {
             console.log(error.message);
         } else {
-            if( rows.length != 0){
-                serialport.write("USER_EXISTING-");
-                console.log("usuario RFID existente");
+            if( rows.length == 0){
+                serialport.write("*RFID_OK*"+codigo+modulo+idUser);
+                console.log("usuario RFID Valido");
             }else{
-                serialport.write("RFID_OK*"+codigo+modulo+idUser);
+            //var id = rows[0].code_rfid;
+            //if(id == codigo){
+                serialport.write("*USER_EXISTING-");
                 console.log("usuario RFID existente");
+            //}else{
+                
             }
         }
     });
@@ -123,7 +130,7 @@ function AddUser(tipo, codigo, modulo, idUser) {
     if (error) {
         console.log(error.message);
     } else {
-        serialport.write("USER_ADDED-");
+        serialport.write("*USER_ADDED-");
         console.log('Usuario adicionado!!');
     }
     });
@@ -147,11 +154,11 @@ function CheckAdmin(x, y, z){
         console.log(error.message);
     } else {
         if( rows.length != 0 ){
-        console.log("admin ok");
-        serialport.write("ADMIN*OK-");
+            console.log("admin ok");
+            serialport.write("*ADMIN*OK-");
         }else{
-        serialport.write("ADMIN*FAIL-");
-        console.log("usuario existente");
+            serialport.write("*ADMIN*FAIL-");
+            console.log("usuario existente");
         }
     }
     });
@@ -175,9 +182,9 @@ function Access(x, y, z){
     } else {
         if( rows.length == 0){
             console.log("usuario no existe");
-            serialport.write("USER_NONEXIST-");
+            serialport.write("*USER_NONEXIST-");
             if(x == "biometria"){
-                serialport.write("FP_DELETE*"+y);
+                serialport.write("*FP_DELETE*"+y);
             }
         }else{
             console.log("usuario existente");
@@ -197,10 +204,10 @@ function Access(x, y, z){
                 Open(nombre, apellido, sexo);
                 History(id, nombre, apellido, x, estado, idModulo);
             }else if(estado == "0" || user == "OFF"){
-                serialport.write("USER_DENIED*"+nombre+"*"+apellido +"-");
+                serialport.write("*USER_DENIED*"+nombre+"*"+apellido +"-");
                 History(id, nombre, apellido, x, estado, idModulo);
             }else{
-                serialport.write("USER_NONEXIST-");
+                serialport.write("*USER_NONEXIST-");
             }
         }
     }
@@ -294,7 +301,7 @@ function CheckUser(idModulo, idUser){
     } else {
         if( rows.length == 0){
             console.log("usuario no existe");
-            serialport.write("USER_NONEXIST-");
+            serialport.write("*USER_NONEXIST-");
         }else{
             var biometria =0;
             var rfid = 0;
@@ -312,9 +319,9 @@ function CheckUser(idModulo, idUser){
                     rfid=1;
                 }
                 console.log("USER_ADD*"+idUser+"*"+id_bio+"-");
-                serialport.write("USER_ADD*"+idUser+"*"+id_bio+"-");
+                serialport.write("*USER_ADD*"+idUser+"*"+id_bio+"-");
             }else{
-                serialport.write("USER_DELETED-");
+                serialport.write("*USER_DELETED-");
             }
         }
     }
