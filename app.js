@@ -50,14 +50,14 @@ function Controlador(data){
         }
     }else if(Data[0] == "RFID"){ //Si Data[0] = "RFID" significa que se esta ejecutando una acción por medio de RFID
         if(Data[1] == "ADMIN"){  //Si Data[1] = "USER" significa que hay un usuario solicitando acceso.
-            Acceso(Data[0], Data[2], Data[3]); //Envia a la función Access() 
-        }else { // el caso que Data[1] = "ADMIN" significa que el admin va a verifiar o agregar usuario RFID 
-           Code = Data[2]; //id bio 
+            Code = Data[2]; //id bio 
            if(Data[2] == "ADD"){
                CheckRFID(Data[3], Data[4], Data[5]);
            }else{
                AddUser("rfid", Code, Data[3], Data[4]); //data3 = modulo  data4= iduser
-           }
+           } 
+        }else { // el caso que Data[1] = "ADMIN" significa que el admin va a verifiar o agregar usuario RFID 
+           Acceso(Data[0], Data[2], Data[3]); //Envia a la función Access()
         }
     }
     else if(Data[0] == "USER"){
