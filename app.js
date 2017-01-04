@@ -1,4 +1,4 @@
-//var gpio = require('rpi-gpio');
+var gpio = require('rpi-gpio');
 
 var SerialPort = require("serialport").SerialPort;
 var serialport = new SerialPort(process.argv[2]);
@@ -6,7 +6,7 @@ var mysql      = require('mysql');
 
 var host  = 'localhost';  //RPI
 var user = 'root';
-var password = 'adminCIAL2016';
+var password = 'nosewn';
 var database = 'passctrl';
 /*
 var host  = '103.224.22.99';  //raidbotics.com
@@ -17,7 +17,7 @@ var database = 'raidbuue_cControl';
 var Type = '';
 var Code = '';
 var DataArduino = "";
-//gpio.setup(7, gpio.DIR_OUT);
+gpio.setup(7, gpio.DIR_OUT);
 
 serialport.on('open', function(){
     console.log('Serial Port Opend');
@@ -80,11 +80,11 @@ function Controlador(data){
 function Open(x, y, z) {
     serialport.write("*OPEN_DOOR*"+x+"*"+y+"*"+z+"-")
     //rpi
-    /*gpio.write(7, true);
+    gpio.write(7, true);
     setTimeout(function () {
         gpio.write(7, false);
     }, 1000);
-    */
+    
 }
 /********************************************Adicionar_Usuario***********************************************************/
 function CheckRFID(codigo, modulo, idUser) {
